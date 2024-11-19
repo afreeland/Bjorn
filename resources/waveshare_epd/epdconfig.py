@@ -3,6 +3,13 @@ import os
 import sys
 import time
 import subprocess
+import spidev
+import gpiozero
+import logging
+from logger import Logger
+
+# Configure logging
+logger = Logger(name="epd.py", level=logging.DEBUG)
 
 from ctypes import *
 
@@ -19,9 +26,7 @@ class RaspberryPi:
     SCLK_PIN = 11
 
     def __init__(self):
-        import spidev
-        import gpiozero
-        
+        logger.debug("INIT***************")
         self.SPI = spidev.SpiDev()
         self.GPIO_RST_PIN    = gpiozero.LED(self.RST_PIN)
         self.GPIO_DC_PIN     = gpiozero.LED(self.DC_PIN)
@@ -116,20 +121,27 @@ class RaspberryPi:
         return 0
 
     def module_exit(self, cleanup=False):
-        # logger.debug("spi end")
-        self.SPI.close()
-
-        self.GPIO_RST_PIN.off()
-        self.GPIO_DC_PIN.off()
-        self.GPIO_PWR_PIN.off()
-        # logger.debug("close 5V, Module enters 0 power consumption ...")
+        try:
+            logger.debug("Attempting to close SPI")
+            self.SPI.close()
+        except Exception as e:
+            logger.debug(f"Failed to close SPI: {e}")
+        
+        try:
+            self.GPIO_RST_PIN.off()
+            self.GPIO_DC_PIN.off()
+            self.GPIO_PWR_PIN.off()
+        except Exception as e:
+            logger.error(f"Failed to turn off GPIO pins: {e}")
         
         if cleanup:
-            self.GPIO_RST_PIN.close()
-            self.GPIO_DC_PIN.close()
-            # self.GPIO_CS_PIN.close()
-            self.GPIO_PWR_PIN.close()
-            self.GPIO_BUSY_PIN.close()
+            try:
+                self.GPIO_RST_PIN.close()
+                self.GPIO_DC_PIN.close()
+                self.GPIO_PWR_PIN.close()
+                self.GPIO_BUSY_PIN.close()
+            except Exception as e:
+                logger.error(f"Failed to clean up GPIO pins: {e}")
 
         
 

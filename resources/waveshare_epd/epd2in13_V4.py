@@ -1,11 +1,12 @@
 import logging
 from . import epdconfig
+from logger import Logger
 
 # Display resolution
 EPD_WIDTH       = 122
 EPD_HEIGHT      = 250
 
-logger = logging.getLogger(__name__)
+logger = Logger(name="v4.py", level=logging.DEBUG)
 
 class EPD:
     def __init__(self):
@@ -138,7 +139,9 @@ class EPD:
     parameter:
     '''
     def init(self):
+        logger.debug("v4 init")
         if (epdconfig.module_init() != 0):
+            logger.debug("v4 init early return")
             return -1
         # EPD hardware init start
         self.reset()
@@ -311,6 +314,7 @@ class EPD:
     parameter:
     '''
     def sleep(self):
+        logger.debug("sleep causing exit***")
         self.send_command(0x10) #enter deep sleep
         self.send_data(0x01)
         
